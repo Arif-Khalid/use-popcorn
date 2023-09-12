@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
+import { useMovies } from "./useMovies";
 
 // const tempMovieData = [
 //   {
@@ -52,6 +53,24 @@ const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
 function Search({ query, setQuery }) {
+  const inputEl = useRef(null);
+
+  useEffect(
+    function () {
+      function callback(e) {
+        if (e.code === "Enter" && document.activeElement !== inputEl.current) {
+          setQuery("");
+          inputEl.current.focus();
+        }
+      }
+      document.addEventListener("keydown", callback);
+      return function () {
+        document.removeEventListener("keydown", callback);
+      };
+    },
+    [setQuery]
+  );
+
   return (
     <input
       className="search"
@@ -59,6 +78,7 @@ function Search({ query, setQuery }) {
       placeholder="Search movies..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
+      ref={inputEl}
     />
   );
 }
@@ -150,15 +170,14 @@ function MovieDetails({
 
   useEffect(
     function () {
-      function closeMovieCallback(e) {
+      function callback(e) {
         if (e.code === "Escape") {
           onCloseMovie();
-          console.log("CLOSING");
         }
       }
-      document.addEventListener("keydown", closeMovieCallback);
+      document.addEventListener("keydown", callback);
       return function () {
-        document.removeEventListener("keydown", closeMovieCallback);
+        document.removeEventListener("keydown", callback);
       };
     },
     [onCloseMovie]
@@ -372,16 +391,13 @@ function Loader() {
 
 function ErrorMessage({ message }) {
   return (
-    <div>
+    <div className="error">
       <span>⛔</span> {message}
     </div>
   );
 }
 export default function App() {
-  const [movies, setMovies] = useState([]);
   const [query, setQuery] = useState("");
-  const [numLoading, setNumLoading] = useState(0);
-  const [errorMessage, setErrorMessage] = useState("");
   const [selectedId, setSelectedId] = useState("");
 
   const [watched, setWatched] = useState(function () {
@@ -423,51 +439,8 @@ export default function App() {
     },
     [watched]
   );
-  useEffect(
-    function () {
-      const controller = new AbortController();
-      async function fetchMovies() {
-        try {
-          setErrorMessage("");
-          setNumLoading((numLoading) => numLoading + 1);
 
-          const res = await fetch(
-            `http://www.omdbapi.com/?apikey=4d3c0219&s=${query}`,
-            { signal: controller.signal }
-          );
-
-          if (!res.ok) {
-            throw new Error("Something went wrong");
-          }
-
-          const data = await res.json();
-          if (data.Response === "False") {
-            throw new Error("Movie not found");
-          }
-          setMovies(data.Search);
-          setErrorMessage("");
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            setErrorMessage(err.message);
-          }
-        } finally {
-          setNumLoading((numLoading) => numLoading - 1);
-        }
-      }
-
-      if (query.length < 3) {
-        setMovies([]);
-        setErrorMessage("");
-        return;
-      }
-      fetchMovies();
-
-      return function () {
-        controller.abort();
-      };
-    },
-    [query]
-  );
+  const { movies, numLoading, errorMessage } = useMovies(query);
 
   return (
     <>
@@ -486,6 +459,7 @@ export default function App() {
         <Box>
           {selectedId ? (
             <MovieDetails
+              key={selectedId}
               watched={watched}
               selectedId={selectedId}
               onCloseMovie={handleCloseMovie}
