@@ -379,11 +379,15 @@ function ErrorMessage({ message }) {
 }
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [query, setQuery] = useState("");
   const [numLoading, setNumLoading] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedId, setSelectedId] = useState("");
+
+  const [watched, setWatched] = useState(function () {
+    const storedValue = localStorage.getItem("watched");
+    return JSON.parse(storedValue);
+  });
 
   function handleSelectMovie(id) {
     setSelectedId(id === selectedId ? "" : id);
@@ -413,6 +417,12 @@ export default function App() {
     );
   }
 
+  useEffect(
+    function () {
+      localStorage.setItem("watched", JSON.stringify(watched));
+    },
+    [watched]
+  );
   useEffect(
     function () {
       const controller = new AbortController();
