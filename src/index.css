@@ -294,7 +294,8 @@ body {
   gap: 2.4rem;
 }
 
-.btn-add {
+.btn-add,
+.btn-remove {
   background-color: var(--color-primary);
   color: var(--color-text);
   border: none;

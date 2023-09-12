@@ -240,7 +240,7 @@ function MovieDetails({
                 </button>
               )}
               {watchedMovie && (
-                <button className="btn-add" onClick={handleRemoveWatched}>
+                <button className="btn-remove" onClick={handleRemoveWatched}>
                   <span>❌</span> Remove from list
                 </button>
               )}
