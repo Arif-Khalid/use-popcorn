@@ -381,7 +381,7 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [query, setQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [numLoading, setNumLoading] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedId, setSelectedId] = useState("");
 
@@ -419,7 +419,7 @@ export default function App() {
       async function fetchMovies() {
         try {
           setErrorMessage("");
-          setIsLoading(true);
+          setNumLoading((numLoading) => numLoading + 1);
 
           const res = await fetch(
             `http://www.omdbapi.com/?apikey=4d3c0219&s=${query}`,
@@ -441,7 +441,7 @@ export default function App() {
             setErrorMessage(err.message);
           }
         } finally {
-          setIsLoading(false);
+          setNumLoading((numLoading) => numLoading - 1);
         }
       }
 
@@ -467,10 +467,10 @@ export default function App() {
       </NavBar>
       <Main>
         <Box>
-          {!isLoading && !errorMessage && (
+          {!numLoading && !errorMessage && (
             <MovieList movies={movies} onSelectMovie={handleSelectMovie} />
           )}
-          {isLoading && <Loader />}
+          {Boolean(numLoading) && <Loader />}
           {errorMessage && <ErrorMessage message={errorMessage} />}
         </Box>
         <Box>
